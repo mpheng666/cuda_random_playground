@@ -1,7 +1,22 @@
-__global__ void add(int *a, int *b, int *c)
+# define N (2048*2048)
+#define THREADS_PER_BLOCK 512
+
+__global__ void add(int *a, int *b, int *c, int n)
 {
-    // blockIdc.x magic variabele to access block index
-    c[blockIdx.x] = a[blockIdx.x] + b[blockIdx.x];
+    // // blockIdc.x magic variabele to access block index
+    // c[blockIdx.x] = a[blockIdx.x] + b[blockIdx.x];
+
+    // // Use thread instead
+    // c[threadIdx.x] = a[threadIdx.x] + b[threadIdx.x];
+
+    // Use parallel threads and parallel blocks
+    int index = threadIdx.x + blockIdx.x * blockDim.x;
+    // Typical problems are not whole multiples of blockDim.x
+    // Avid accessing beyond the end of the arrays
+    if(index<n)
+    {
+        c[index] = a[index] + b[index];
+    }
 }
 
 void random_ints(int* a, int N)
@@ -13,7 +28,6 @@ void random_ints(int* a, int N)
 
 int main()
 {
-    int N = 512;
     int *a, *b, *c;                // Host copies
     int *d_a, *d_b, *d_c;       // Device copies
     int size = N * sizeof(int);
@@ -32,8 +46,10 @@ int main()
     cudaMemcpy(d_a, a, size, cudaMemcpyHostToDevice);
     cudaMemcpy(d_b, b, size, cudaMemcpyHostToDevice);
 
-    // add<<<N_times, 1>>>()
-    add<<<N,1>>>(d_a, d_b, d_c);
+    // add<<<blocks, threads>>>()
+    // add<<<N,1>>>(d_a, d_b, d_c);
+    add<<<N/THREADS_PER_BLOCK ,THREADS_PER_BLOCK>>>(d_a, d_b, d_c, N);
+    // add<<<(N + M-1)/M, M>>>(d_a, d_b, d_c, N);
 
     // copy result back to host
     cudaMemcpy(c, d_c, size, cudaMemcpyDeviceToHost);
