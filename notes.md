@@ -28,3 +28,22 @@
 
 - Each parallel invocation is referred to as a block
 - A set of blocks is referred to a grid
+- Each invocation can refer to its block index using blockIdx.x
+
+### 3. Threads
+
+- A block can be split into parallel threads
+- Synchronization
+- Can share memories
+
+### 4. Indexing
+
+- Combining threads and blocks
+- M threads/block
+- int index = threadIdx.x + blockIdx.x * blockDim.x
+
+### 5/6. Cooperating threads
+
+- Declare using __shared__, allocated per block
+- Data is not visible to threads in other blocks
+- Use __synthreads() as a barrier to prevent data hazards
